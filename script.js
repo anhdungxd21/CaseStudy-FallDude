@@ -17,6 +17,10 @@ class Player {
             x: GAME_WIDTH/2-16,
             y: 0
         }
+        this.size = {
+            w: 32,
+            h:32
+        }
     }
 
     getXPosition = function () {
@@ -72,11 +76,15 @@ class Bullet {
 class Enemy {
     constructor(hp, size) {
         this.hp = hp;
-        this.size = size;
+        this.size = {
+            w: size,
+            h:size
+        };
         this.position = {
             x: Math.floor(Math.random()*380 + 100),
             y: 700
         }
+
     }
     move = function (ctx) {
         this.position.y -= 2;
@@ -85,12 +93,33 @@ class Enemy {
     draw = function (ctx) {
         ctx.beginPath();
         ctx.fillStyle = "#000000";
-        ctx.fillRect(this.position.x, this.position.y, this.size, this.size);
+        ctx.fillRect(this.position.x, this.position.y, this.size.w, this.size.h);
         ctx.closePath();
     }
 }
 function detectCollision(obj1, obj2) {
-    let bo
+    let topObj1 = obj1.position.y;
+    let bottomObj1 = obj1.position.y + obj1.size.h;
+    let leftObj1 = obj1.position.x;
+    let rightObj1 = obj1.position.x + obj1.size.w;
+
+    let topObj2 = obj2.position.y;
+    let bottomObj2 = obj2.position.y + obj2.size.h;
+    let leftObj2 = obj2.position.x;
+    let rightObj2 = obj2.position.x + obj2.size.w;
+    //console.log(rightObj1,leftObj2);
+    let leftCheck = leftObj1 > leftObj2 && leftObj1 < rightObj2;
+    let rightCheck = rightObj1 > leftObj2 && rightObj1 < rightObj2;
+    //console.log(leftCheck,rightCheck);
+    let horizontalCheck = leftCheck || rightCheck;
+    console.log()
+    return bottomObj1 >= topObj2 &&
+        bottomObj2 >= topObj1 &&
+        horizontalCheck;
+
+
+
+
 }
 let player = new Player(100, 5);
 const bulletArr = [];
@@ -117,7 +146,7 @@ function input() {
                     player.position.y = 110;
                 }
                 if (bulletTimeCount >=30) {
-                    let bullet = new Bullet(player.position.x + 16, player.position.y, 10, ctx);
+                    let bullet = new Bullet(player.position.x + 16, player.position.y+100, 10, ctx);
                     bulletArr.push(bullet);
                     bulletTimeCount = 0;
                 }
@@ -161,6 +190,7 @@ function clearCache() {
 }
 let enemy = new Enemy(1,32)
 function gameStart() {
+
     ctx.clearRect(0,0,GAME_WIDTH,GAME_HEIGHT);
     borderDraw();
     bulletArr.forEach(item => {
@@ -169,6 +199,8 @@ function gameStart() {
     enemy.move(ctx);
     player.draw(c);
     player.moveVertical(gravity);
+    console.log(detectCollision(player,enemy));
+    // console.log(player.position.x, enemy.position.x);
     //After 1 second
     clearCache();
     bulletTimeCount++;
