@@ -6,7 +6,9 @@ const GAME_HEIGHT = 600;
 let gravity = 1;
 let jump = -100;
 let speedPlayer = 20;
+let score = 0;
 let timeLoop = 0;
+let difficult = 60;
 let bulletTimeCount = 0;
 class Player {
     constructor(hp, speed) {
@@ -22,14 +24,12 @@ class Player {
             h:32
         }
     }
-
-    getXPosition = function () {
-        return this.position.x;
+    setLoseHp = function () {
+        this.hp--;
     }
-    getYPosition = function () {
-        return this.position.y;
+    getHp = function(){
+        return this.hp
     }
-
     moveHorizontal = function (speed) {
         this.position.x += speed;
     }
@@ -87,8 +87,9 @@ class Bullet {
     }
 }
 class Enemy {
-    constructor(ctx, size) {
+    constructor(ctx, size, speed) {
         this.ctx = ctx;
+        this.speed = speed;
         this.size = {
             w: size,
             h:size
@@ -100,7 +101,7 @@ class Enemy {
 
     }
     move = function () {
-        this.position.y -= 2;
+        this.position.y -= this.speed;
         this.draw();
     }
     draw = function () {
@@ -134,7 +135,7 @@ function detectCollision(obj1, obj2) {
 
 
 }
-let player = new Player(100, 5);
+let player = new Player(3, 5);//<-----------------------------------Player
 const bulletArr = [];
 const enemyArr = [];
 
@@ -165,8 +166,6 @@ function input() {
                     player.shootBullet();
                 }
                 player.moveVertical(jump);
-                console.log(player.position.y);
-                console.log(bulletArr);
                 break;
         }
     })
@@ -205,32 +204,55 @@ function clearCache() {
 
 }
 function spawnEnemy () {
-    if (enemyArr.length <= 20 && timeLoop == 60){
-        let enemy = new Enemy(ctx,32)
+    if (enemyArr.length <= 20 && timeLoop >= difficult){
+        let enemy = new Enemy(ctx,32,3)
         enemyArr.push(enemy);
         timeLoop = 0;
     }
-    enemyArr.forEach((item, index) => {
-        item.move();
-        if (item.position.y < -300) {
+    enemyArr.forEach((enemy, index) => {
+        enemy.move();
+        if (detectCollision(player,enemy)){
+            enemyArr.splice(index,1);
+            player.setLoseHp();
+            console.log(player.getHp());
+        }
+        if (enemy.position.y < -300) {
             enemyArr.splice(index,1);
         }
+        bulletArr.forEach((bullet, bulletCount)=>{
+            if (detectCollision(bullet,enemy) ){
+                enemyArr.splice(index,1);
+                bulletArr.splice(bulletCount,1);
+            }
+        })
     })
+}////<-----------------------------------Player
+function gameDifficult() {
+    if(score % 360 == 0) {
+        if (difficult <= 25) {
+            difficult = 25;
+        } else {
+            difficult-=5;
+        }
+    }
+    console.log(enemyArr.length)
+    console.log(difficult);
 }
-
 function gameStart () {
     borderDraw();
     bulletArr.forEach(item => {
         item.bulletDown();
     });
     spawnEnemy();
-    console.log(enemyArr);
+    //console.log(enemyArr);
     player.draw(c);
     player.moveVertical(gravity);
     //console.log(detectCollision(player,enemy));
     clearCache();
     bulletTimeCount++;
     timeLoop++;
+    score++;
+    gameDifficult()
 }
 function gameInit() {
     //Draw the game
