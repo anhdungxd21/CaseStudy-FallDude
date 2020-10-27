@@ -37,6 +37,15 @@ class Player {
     moveVertical = function (speed) {
         this.position.y += speed;
     }
+    shootBullet = function() {
+        this.ammo -=1;
+    }
+    getAmmoInfo = function() {
+        return this.ammo;
+    }
+    setFullAmmo = function () {
+        this.ammo = 4;
+    }
 
     draw = function (canvas) {
         this.canvas = canvas;
@@ -52,6 +61,10 @@ class Bullet {
         this.position = {
             x: x,
             y: y
+        }
+        this.size = {
+            w:10,
+            h:12
         }
         this.ammo = 4;
         this.speed = speed;
@@ -69,13 +82,13 @@ class Bullet {
     draw = function () {
         this.ctx.beginPath();
         this.ctx.fillStyle = "#ff7171";
-        this.ctx.fillRect(this.position.x,this.position.y,10,12);
+        this.ctx.fillRect(this.position.x,this.position.y,this.size.w,this.size.h);
         this.ctx.closePath();
     }
 }
 class Enemy {
-    constructor(hp, size) {
-        this.hp = hp;
+    constructor(ctx, size) {
+        this.ctx = ctx;
         this.size = {
             w: size,
             h:size
@@ -86,15 +99,15 @@ class Enemy {
         }
 
     }
-    move = function (ctx) {
+    move = function () {
         this.position.y -= 2;
-        this.draw(ctx);
+        this.draw();
     }
-    draw = function (ctx) {
-        ctx.beginPath();
-        ctx.fillStyle = "#000000";
-        ctx.fillRect(this.position.x, this.position.y, this.size.w, this.size.h);
-        ctx.closePath();
+    draw = function () {
+        this.ctx.beginPath();
+        this.ctx.fillStyle = "#000000";
+        this.ctx.fillRect(this.position.x, this.position.y, this.size.w, this.size.h);
+        this.ctx.closePath();
     }
 }
 function detectCollision(obj1, obj2) {
@@ -107,12 +120,12 @@ function detectCollision(obj1, obj2) {
     let bottomObj2 = obj2.position.y + obj2.size.h;
     let leftObj2 = obj2.position.x;
     let rightObj2 = obj2.position.x + obj2.size.w;
-    //console.log(rightObj1,leftObj2);
+
     let leftCheck = leftObj1 > leftObj2 && leftObj1 < rightObj2;
     let rightCheck = rightObj1 > leftObj2 && rightObj1 < rightObj2;
-    //console.log(leftCheck,rightCheck);
+
     let horizontalCheck = leftCheck || rightCheck;
-    console.log()
+
     return bottomObj1 >= topObj2 &&
         bottomObj2 >= topObj1 &&
         horizontalCheck;
@@ -146,9 +159,10 @@ function input() {
                     player.position.y = 110;
                 }
                 if (bulletTimeCount >=30) {
-                    let bullet = new Bullet(player.position.x + 16, player.position.y+100, 10, ctx);
+                    let bullet = new Bullet(player.position.x + 16, player.position.y-100, 10, ctx);
                     bulletArr.push(bullet);
                     bulletTimeCount = 0;
+                    player.shootBullet();
                 }
                 player.moveVertical(jump);
                 console.log(player.position.y);
@@ -172,6 +186,7 @@ function input() {
     //     }
     // })
 }
+
 function borderDraw() {
     ctx.beginPath()
     ctx.moveTo(84,0);
@@ -187,22 +202,40 @@ function clearCache() {
     if(bulletArr.length >= 20){
         bulletArr.shift();
     }
-}
-let enemy = new Enemy(1,32)
-function gameStart() {
 
-    ctx.clearRect(0,0,GAME_WIDTH,GAME_HEIGHT);
+}
+function spawnEnemy () {
+    if (enemyArr.length <= 20 && timeLoop == 60){
+        let enemy = new Enemy(ctx,32)
+        enemyArr.push(enemy);
+        timeLoop = 0;
+    }
+    enemyArr.forEach((item, index) => {
+        item.move();
+        if (item.position.y < -300) {
+            enemyArr.splice(index,1);
+        }
+    })
+}
+
+function gameStart () {
     borderDraw();
     bulletArr.forEach(item => {
         item.bulletDown();
     });
-    enemy.move(ctx);
+    spawnEnemy();
+    console.log(enemyArr);
     player.draw(c);
     player.moveVertical(gravity);
-    console.log(detectCollision(player,enemy));
-    // console.log(player.position.x, enemy.position.x);
-    //After 1 second
+    //console.log(detectCollision(player,enemy));
     clearCache();
     bulletTimeCount++;
+    timeLoop++;
 }
-setInterval(gameStart,1000/60);
+function gameInit() {
+    //Draw the game
+    ctx.clearRect(0,0,GAME_WIDTH,GAME_HEIGHT);
+    gameStart();
+
+}
+setInterval(gameInit,1000/60);
