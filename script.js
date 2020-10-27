@@ -1,6 +1,11 @@
 let c = document.getElementById("myGame");
 let ctx = c.getContext("2d");
-
+const GAME_STATE = {
+    MENU:0,
+    START:1,
+    OVER:2
+}
+let gameState = GAME_STATE.MENU;
 const GAME_WIDTH = 600;
 const GAME_HEIGHT = 600;
 let gravity = 1;
@@ -166,6 +171,8 @@ function input() {
                     player.shootBullet();
                 }
                 player.moveVertical(jump);
+                if(gameState == GAME_STATE.MENU) gameState = GAME_STATE.START;
+                if(gameState == GAME_STATE.OVER) gameState = GAME_STATE.MENU;
                 break;
         }
     })
@@ -185,7 +192,7 @@ function input() {
     //     }
     // })
 }
-
+input();
 function borderDraw() {
     ctx.beginPath()
     ctx.moveTo(84,0);
@@ -196,7 +203,6 @@ function borderDraw() {
     ctx.stroke();
     ctx.closePath();
 }
-input();
 function clearCache() {
     if(bulletArr.length >= 20){
         bulletArr.shift();
@@ -239,6 +245,7 @@ function gameDifficult() {
     console.log(difficult);
 }
 function gameStart () {
+    ctx.clearRect(0,0,GAME_WIDTH,GAME_HEIGHT);
     borderDraw();
     bulletArr.forEach(item => {
         item.bulletDown();
@@ -252,12 +259,31 @@ function gameStart () {
     bulletTimeCount++;
     timeLoop++;
     score++;
-    gameDifficult()
+    gameDifficult();
+    if(player.getHp() <=0){
+        gameState = GAME_STATE.OVER;
+    }
 }
 function gameInit() {
     //Draw the game
-    ctx.clearRect(0,0,GAME_WIDTH,GAME_HEIGHT);
-    gameStart();
+    switch (gameState){
+        case GAME_STATE.MENU:
+            ctx.rect(0,0,GAME_WIDTH,GAME_HEIGHT);
+            ctx.fillStyle = "#000";
+            ctx.fill();
+
+            ctx.font = "30px Arial";
+            ctx.fillStyle = "white";
+            ctx.textAlign = "center";
+            ctx.fillText("Press SPACE To Start",GAME_WIDTH/2,GAME_HEIGHT/2)
+            break;
+        case GAME_STATE.START:
+            gameStart();
+            break;
+        case GAME_STATE.OVER:
+            break;
+    }
+
 
 }
 setInterval(gameInit,1000/60);
