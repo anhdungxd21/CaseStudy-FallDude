@@ -116,6 +116,34 @@ class Enemy {
         this.ctx.closePath();
     }
 }
+class ImgGame {
+    constructor(ctx, img,x,y) {
+        this.ctx = ctx;
+        this.img = img;
+        this.move = -5;
+        this.position = {
+            x: x,
+            y:y
+        }
+    }
+    imageMove = function () {
+        this.position.y += this.move
+    }
+    loadImage = function () {
+        this.background = new Image();
+        this.background.src = this.img;
+        this.drawStatic()
+        this.imageMove()
+    }
+
+    drawStatic = function () {
+        this.ctx.drawImage(
+            this.background,
+            this.position.x,
+            this.position.y
+        )
+    }
+}
 function detectCollision(obj1, obj2) {
     let topObj1 = obj1.position.y;
     let bottomObj1 = obj1.position.y + obj1.size.h;
@@ -140,11 +168,10 @@ function detectCollision(obj1, obj2) {
 
 
 }
-let player = new Player(3, 5);//<-----------------------------------Player
+let player = new Player(3, 5);
 const bulletArr = [];
 const enemyArr = [];
-
-
+const backgroundArr = [];
 function input() {
     document.addEventListener("keydown", function (event) {
         switch (event.keyCode) {
@@ -172,25 +199,9 @@ function input() {
                 }
                 player.moveVertical(jump);
                 if(gameState == GAME_STATE.MENU) gameState = GAME_STATE.START;
-                if(gameState == GAME_STATE.OVER) gameState = GAME_STATE.MENU;
                 break;
         }
     })
-    // document.addEventListener("keyup", function (event){
-    //     switch(event.keyCode) {
-    //         case 68:
-    //             player.moveHorizontal(0);
-    //             console.log(player.position.x);
-    //             break;
-    //         case 65:
-    //             player.moveHorizontal(0)
-    //             console.log(player.position.x);
-    //             break;
-    //         case 32:
-    //             console.log("space");
-    //             break;
-    //     }
-    // })
 }
 input();
 function borderDraw() {
@@ -232,21 +243,35 @@ function spawnEnemy () {
             }
         })
     })
-}////<-----------------------------------Player
+}////<-----------------------------------Enemy
 function gameDifficult() {
     if(score % 360 == 0) {
         if (difficult <= 25) {
-            difficult = 25;
+            difficult = 15;
         } else {
             difficult-=5;
         }
     }
-    console.log(enemyArr.length)
-    console.log(difficult);
+}
+function backgroundScroll() {
+    if (backgroundArr.length == 0) {
+        let background = new ImgGame(ctx, "images/Background.png",0, 0);
+        backgroundArr.push(background);
+    }else if (backgroundArr.length < 3){
+        let background = new ImgGame(ctx, "images/Background.png",0, 695);
+        backgroundArr.push(background);
+    }
+    backgroundArr.forEach((item,index) => {
+        item.loadImage();
+        if(item.position.y <-695){
+            backgroundArr.splice(0,1);
+        }
+    })
 }
 function gameStart () {
     ctx.clearRect(0,0,GAME_WIDTH,GAME_HEIGHT);
     borderDraw();
+    backgroundScroll();
     bulletArr.forEach(item => {
         item.bulletDown();
     });
@@ -260,7 +285,7 @@ function gameStart () {
     timeLoop++;
     score++;
     gameDifficult();
-    if(player.getHp() <=0){
+    if(player.getHp() <=0 || player.position.y >= 700){
         gameState = GAME_STATE.OVER;
     }
 }
@@ -281,6 +306,15 @@ function gameInit() {
             gameStart();
             break;
         case GAME_STATE.OVER:
+            ctx.rect(0,0,GAME_WIDTH,GAME_HEIGHT);
+            ctx.fillStyle = "#000";
+            ctx.fill();
+
+            ctx.font = "30px Arial";
+            ctx.fillStyle = "white";
+            ctx.textAlign = "center";
+            ctx.fillText("GAME OVER",GAME_WIDTH/2,GAME_HEIGHT/2)
+            ctx.fillText(`Sore: ${score}`,GAME_WIDTH/2,GAME_HEIGHT/2+50);
             break;
     }
 
