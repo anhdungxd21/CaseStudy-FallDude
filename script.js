@@ -16,10 +16,10 @@ let timeLoop = 0;
 let difficult = 60;
 let bulletTimeCount = 0;
 class Player {
-    constructor(hp, speed) {
+    constructor(ctx) {
         this.ammo = 4;
-        this.hp = hp;
-        this.speed = speed
+        this.hp = 4;
+        this.speed = 5;
         this.position = {
             x: GAME_WIDTH/2-16,
             y: 0
@@ -28,6 +28,8 @@ class Player {
             w: 32,
             h:32
         }
+        this.ctx = ctx;
+        this.src = "images/left-player.png";
     }
     setLoseHp = function () {
         this.hp--;
@@ -51,14 +53,24 @@ class Player {
     setFullAmmo = function () {
         this.ammo = 4;
     }
+    setChangeSource = function (newSrc){
+        this.src = newSrc;
+    }
+    loadPersonImage = function (src) {
+        this.background = new Image();
+        this.background.src = this.src;
+        this.drawStatic();
+    }
+    drawStatic = function () {
+        this.ctx.drawImage(
+            this.background,
+            this.position.x,
+            this.position.y
+        )
+    }
 
-    draw = function (canvas) {
-        this.canvas = canvas;
-        this.ctx = this.canvas.getContext("2d");
-        this.ctx.beginPath();
-        this.ctx.fillStyle = "#f00";
-        this.ctx.fillRect(this.position.x, this.position.y, 32, 32);
-        this.ctx.closePath();
+    draw = function () {
+        this.loadPersonImage();
     }
 } //Player
 class Bullet {
@@ -109,11 +121,20 @@ class Enemy {
         this.position.y -= this.speed;
         this.draw();
     }
+    loadPersonImage = function (src) {
+        this.background = new Image();
+        this.background.src = "images/Enemy.png";
+        this.drawStatic();
+    }
+    drawStatic = function () {
+        this.ctx.drawImage(
+            this.background,
+            this.position.x,
+            this.position.y
+        )
+    }
     draw = function () {
-        this.ctx.beginPath();
-        this.ctx.fillStyle = "#000000";
-        this.ctx.fillRect(this.position.x, this.position.y, this.size.w, this.size.h);
-        this.ctx.closePath();
+        this.loadPersonImage()
     }
 }
 class ImgGame {
@@ -135,7 +156,11 @@ class ImgGame {
         this.drawStatic()
         this.imageMove()
     }
-
+    loadPersonImage = function () {
+        this.background = new Image();
+        this.background.src = this.img;
+        this.drawStatic();
+    }
     drawStatic = function () {
         this.ctx.drawImage(
             this.background,
@@ -168,7 +193,7 @@ function detectCollision(obj1, obj2) {
 
 
 }
-let player = new Player(3, 5);
+let player = new Player(ctx);
 const bulletArr = [];
 const enemyArr = [];
 const backgroundArr = [];
@@ -179,12 +204,14 @@ function input() {
                 if(player.position.x > 444) {
                     player.position.x = 474-32;
                 }
+                player.setChangeSource("images/right-player.png");
                 player.moveHorizontal(speedPlayer);
                 break;
             case 65:
                 if(player.position.x < 100) {
                     player.position.x = 84+32;
                 }
+                player.setChangeSource("images/left-player.png");
                 player.moveHorizontal(-speedPlayer);
                 break;
             case 32:
@@ -213,7 +240,7 @@ function borderDraw() {
     ctx.lineTo(500, 600);
     ctx.stroke();
     ctx.closePath();
-}
+}///<-------------------------- drop
 function clearCache() {
     if(bulletArr.length >= 20){
         bulletArr.shift();
@@ -268,6 +295,7 @@ function backgroundScroll() {
         }
     })
 }
+
 function gameStart () {
     ctx.clearRect(0,0,GAME_WIDTH,GAME_HEIGHT);
     borderDraw();
@@ -289,6 +317,7 @@ function gameStart () {
         gameState = GAME_STATE.OVER;
     }
 }
+
 function gameInit() {
     //Draw the game
     switch (gameState){
