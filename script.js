@@ -3,6 +3,7 @@ let ctx = c.getContext("2d");
 let themesong = document.getElementById("themesong");
 let getHit = document.getElementById("getHit");
 let thunderSound = document.getElementById("thunder");
+let gameOverSound = document.getElementById("gameOver")
 const GAME_STATE = {
     MENU:0,
     START:1,
@@ -330,10 +331,8 @@ function gameStart () {
         item.bulletDown();
     });
     spawnEnemy();
-    //console.log(enemyArr);
     player.draw(c);
     player.moveVertical(gravity);
-    //console.log(detectCollision(player,enemy));
     clearCache();
     bulletTimeCount++;
     timeLoop++;
@@ -365,7 +364,8 @@ function gameInit() {
             ctx.rect(0,0,GAME_WIDTH,GAME_HEIGHT);
             ctx.fillStyle = "#000";
             ctx.fill();
-
+            gameOverSound.play();
+            themesong.pause();
             ctx.font = "30px Arial";
             ctx.fillStyle = "white";
             ctx.textAlign = "center";
