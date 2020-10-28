@@ -197,6 +197,13 @@ let player = new Player(ctx);
 const bulletArr = [];
 const enemyArr = [];
 const backgroundArr = [];
+const heartArr = [];
+let sizeHeart = 0;
+for (let i = 0; i < 4; i++) {
+    let heart = new ImgGame(ctx,"images/heart.png", 10+sizeHeart, 10);
+    heartArr.push(heart);
+    sizeHeart +=20;
+}
 function input() {
     document.addEventListener("keydown", function (event) {
         switch (event.keyCode) {
@@ -218,13 +225,14 @@ function input() {
                 if (player.position.y < 100 ) {
                     player.position.y = 110;
                 }
-                if (bulletTimeCount >=30) {
+                if (bulletTimeCount >=60) {
                     let bullet = new Bullet(player.position.x + 16, player.position.y-100, 10, ctx);
                     bulletArr.push(bullet);
                     bulletTimeCount = 0;
                     player.shootBullet();
+                    player.moveVertical(jump);
                 }
-                player.moveVertical(jump);
+
                 if(gameState == GAME_STATE.MENU) gameState = GAME_STATE.START;
                 break;
         }
@@ -258,7 +266,7 @@ function spawnEnemy () {
         if (detectCollision(player,enemy)){
             enemyArr.splice(index,1);
             player.setLoseHp();
-            console.log(player.getHp());
+            heartArr.pop();
         }
         if (enemy.position.y < -300) {
             enemyArr.splice(index,1);
@@ -295,11 +303,16 @@ function backgroundScroll() {
         }
     })
 }
-
+function displayHeart(){
+    heartArr.forEach(item =>{
+        item.loadPersonImage();
+    })
+}
 function gameStart () {
     ctx.clearRect(0,0,GAME_WIDTH,GAME_HEIGHT);
     borderDraw();
     backgroundScroll();
+    displayHeart();
     bulletArr.forEach(item => {
         item.bulletDown();
     });
