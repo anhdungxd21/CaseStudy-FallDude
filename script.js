@@ -1,5 +1,8 @@
 let c = document.getElementById("myGame");
 let ctx = c.getContext("2d");
+let themesong = document.getElementById("themesong");
+let getHit = document.getElementById("getHit");
+let thunderSound = document.getElementById("thunder");
 const GAME_STATE = {
     MENU:0,
     START:1,
@@ -15,6 +18,7 @@ let score = 0;
 let timeLoop = 0;
 let difficult = 60;
 let bulletTimeCount = 0;
+let shoot = true;
 class Player {
     constructor(ctx) {
         this.ammo = 4;
@@ -225,16 +229,22 @@ function input() {
                 if (player.position.y < 100 ) {
                     player.position.y = 110;
                 }
-                if (bulletTimeCount >=60) {
+                if (bulletTimeCount >=15 && shoot) {
                     let bullet = new Bullet(player.position.x + 16, player.position.y-100, 10, ctx);
                     bulletArr.push(bullet);
                     bulletTimeCount = 0;
                     player.shootBullet();
                     player.moveVertical(jump);
+                    shoot = false;
                 }
 
                 if(gameState == GAME_STATE.MENU) gameState = GAME_STATE.START;
                 break;
+        }
+    })
+    document.addEventListener("keyup", function (event){
+        if(event.keyCode == 32) {
+            shoot = true;
         }
     })
 }
@@ -265,6 +275,7 @@ function spawnEnemy () {
         enemy.move();
         if (detectCollision(player,enemy)){
             enemyArr.splice(index,1);
+            getHit.play();
             player.setLoseHp();
             heartArr.pop();
         }
@@ -273,6 +284,7 @@ function spawnEnemy () {
         }
         bulletArr.forEach((bullet, bulletCount)=>{
             if (detectCollision(bullet,enemy) ){
+                getHit.play();
                 enemyArr.splice(index,1);
                 bulletArr.splice(bulletCount,1);
             }
@@ -300,6 +312,7 @@ function backgroundScroll() {
         item.loadImage();
         if(item.position.y <-695){
             backgroundArr.splice(0,1);
+            thunderSound.play();
         }
     })
 }
@@ -346,6 +359,7 @@ function gameInit() {
             break;
         case GAME_STATE.START:
             gameStart();
+            themesong.play();
             break;
         case GAME_STATE.OVER:
             ctx.rect(0,0,GAME_WIDTH,GAME_HEIGHT);
